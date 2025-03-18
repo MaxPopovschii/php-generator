@@ -3,7 +3,12 @@
   "displayName": "php-generator",
   "publisher": "vincentgottemda",
   "description": "",
-  "version": "0.0.2",
+  "version": "0.0.3",
+  "icon": "matreshka.png", 
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MaxPopovschii/php-generator.git"
+  },
   "engines": {
     "vscode": "^1.98.0"
   },
