@@ -1,44 +1,81 @@
-# Generatore di CRUD per PHP - Estensione VS Code
+CRUD Generator for PHP — VS Code Extension
+Overview
 
-## Descrizione
-**Generatore di CRUD per PHP** è un'estensione per Visual Studio Code che semplifica la creazione di operazioni CRUD (Create, Read, Update, Delete) in PHP. Utilizza **Node.js**, **TypeScript** e **Mustache.js** per generare automaticamente Controller, Model e View per la tua applicazione PHP.
+CRUD Generator for PHP is a Visual Studio Code extension that streamlines the creation of CRUD (Create, Read, Update, Delete) operations for PHP applications. Developed with Node.js and TypeScript, it allows you to automatically generate Controller, Model, and View files using three predefined structures: MVC, REST, and FUNCTIONAL.
+Features
 
-## Caratteristiche
-- Generazione automatica di file **Controller, Model e View**.
-- Supporto per la personalizzazione dei template tramite **Mustache.js**.
-- Compatibilità con diversi framework PHP.
-- Interfaccia semplice e veloce direttamente da VS Code.
+    ⚡ Automatic generation of Controller, Model, and View files.
 
-## Installazione
-1. Assicurati di avere installato **VS Code** e **Node.js 20+**.
-2. Installa l'estensione da **Visual Studio Marketplace** oppure manualmente:
-   ```sh
-   npm install -g @vscode/vsce
-   vsce package
-   code --install-extension generatore-crud-php.vsix
-   ```
+    🧩 Choose between three generation modes:
 
-## Utilizzo
-1. Apri un progetto PHP in **VS Code**.
-2. Apri la **palette dei comandi** con `Ctrl+Shift+P` (Windows/Linux) o `Cmd+Shift+P` (Mac).
-3. Cerca e seleziona `Genera CRUD`.
-4. Inserisci il nome della tabella o del modello.
-5. L'estensione creerà automaticamente i file necessari.
+        MVC (Model-View-Controller)
 
-## Configurazione
-Puoi personalizzare i template modificando i file Mustache all'interno della cartella `templates` dell'estensione.
+        REST (RESTful API structure)
 
-## Requisiti
-- **VS Code** (ultima versione consigliata)
-- **Node.js 20+**
-- **PHP 7.4+**
+        FUNCTIONAL (pure functional PHP structure)
 
-## Contributi
-Contribuire è semplice! Forka il repository, crea una nuova branch, apporta le modifiche e invia una pull request.
+    🔧 Fully written in TypeScript for performance and scalability.
 
-## Licenza
-Questa estensione è rilasciata sotto licenza **MIT**.
+    🖥️ Simple and intuitive interface integrated into Visual Studio Code.
 
----
-📧 Per supporto o feedback, contattaci su [GitHub Issues]([https://github.com/php-generator/issues](https://github.com/MaxPopovschii/php-generator/issues)).
+    🚀 Boost productivity by eliminating repetitive coding tasks.
 
+Installation
+
+    Ensure you have Visual Studio Code and Node.js v20+ installed.
+
+    Install the extension from the Visual Studio Marketplace, or manually:
+
+    npm install -g @vscode/vsce
+    vsce package
+    code --install-extension crud-generator-php.vsix
+
+Usage
+
+    Open your PHP project in VS Code.
+
+    Launch the Command Palette:
+
+        Ctrl+Shift+P (Windows/Linux)
+
+        Cmd+Shift+P (macOS)
+
+    Search for and select Generate CRUD.
+
+    Enter the table/model name.
+
+    Choose the desired structure type: MVC, REST, or FUNCTIONAL.
+
+    The extension will generate all necessary files automatically.
+
+Structure Types
+Type	Description
+MVC	Generates traditional Model, View, and Controller files.
+REST	Creates RESTful endpoints with Models and Controllers.
+FUNCTIONAL	Generates standalone functional PHP scripts.
+Requirements
+
+    Visual Studio Code (latest version recommended)
+
+    Node.js v20+
+
+    PHP 7.4+
+
+Contributing
+
+Contributions are welcome!
+To contribute:
+
+    Fork this repository.
+
+    Create a new branch (feature/my-feature).
+
+    Commit your changes.
+
+    Open a pull request.
+
+License
+
+This project is licensed under the MIT License.
+
+📬 For support, feedback, or feature requests, please open an issue on GitHub Issues.
