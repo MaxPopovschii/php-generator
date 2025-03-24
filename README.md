@@ -78,4 +78,4 @@ License
 
 This project is licensed under the MIT License.
 
-📬 For support, feedback, or feature requests, please open an issue on GitHub Issues.
+📬 For support, feedback, or feature requests, please open an issue on  [GitHub Issues]([https://github.com/php-generator/issues](https://github.com/MaxPopovschii/php-generator/issues)).
