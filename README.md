@@ -40,5 +40,5 @@ Contribuire è semplice! Forka il repository, crea una nuova branch, apporta le 
 Questa estensione è rilasciata sotto licenza **MIT**.
 
 ---
-📧 Per supporto o feedback, contattaci su [GitHub Issues](https://github.com/php-generator/issues).
+📧 Per supporto o feedback, contattaci su [GitHub Issues]([https://github.com/php-generator/issues](https://github.com/MaxPopovschii/php-generator/issues)).
 
