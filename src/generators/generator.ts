@@ -1,12 +1,14 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-function generatePhpStructure(rootPath: string, type: string, entityName: string) {
+function generatePhpStructure(rootPath: string, type: string, entityName: string, selectedComponents?: string[]) {
     const structure: { [key: string]: any } = {};
+    const sel = (name: string) => !selectedComponents || selectedComponents.includes(name);
 
     if (type === 'MVC') {
-        structure['app'] = {
-            'Controllers': {
+        structure['app'] = {};
+        if (sel('Controller')) {
+            structure['app']['Controllers'] = {
                 [`${entityName}Controller.php`]: `<?php
 namespace App\\Controllers;
 use App\\Models\\${entityName};
@@ -24,8 +26,10 @@ class ${entityName}Controller {
     }
 }
 ?>`
-            },
-            'Models': {
+            };
+        }
+        if (sel('Model')) {
+            structure['app']['Models'] = {
                 [`${entityName}.php`]: `<?php
 namespace App\\Models;
 class ${entityName} {
@@ -47,8 +51,10 @@ class ${entityName} {
     }
 }
 ?>`
-            },
-            'Views': {
+            };
+        }
+        if (sel('View')) {
+            structure['app']['Views'] = {
                 [`${entityName}.php`]: `<!DOCTYPE html>
 <html>
 <head>
@@ -58,15 +64,17 @@ class ${entityName} {
     <h1>Vista per ${entityName}</h1>
 </body>
 </html>`
-            }
-        };
-        structure['routes'] = {
-            'web.php': `<?php
+            };
+        }
+        if (sel('Routes')) {
+            structure['routes'] = {
+                'web.php': `<?php
 require '../app/Controllers/${entityName}Controller.php';
 $controller = new ${entityName}Controller();
 $controller->index();
 ?>`
-        };
+            };
+        }
     } else if (type === 'REST') {
         structure['app'] = {
             'Controllers': {
@@ -214,14 +222,33 @@ return [
     createStructure(rootPath, structure);
 }
 
-function createStructure(basePath: string, structure: any) {
+// Funzione placeholder per la richiesta di conferma sovrascrittura (da gestire lato extension)
+function askOverwriteSync(targetPath: string): boolean {
+    // Node.js non ha prompt sincrono, quindi per VS Code si dovrebbe gestire lato UI.
+    // Qui ritorniamo sempre true per compatibilità, ma il controllo reale va fatto lato extension.ts
+    return true;
+}
+
+function createStructure(basePath: string, structure: any, askOverwrite: (targetPath: string) => boolean = askOverwriteSync) {
     for (const name in structure) {
         const fullPath = path.join(basePath, name);
-        if (typeof structure[name] === 'object') {
-            fs.mkdirSync(fullPath, { recursive: true });
-            createStructure(fullPath, structure[name]);
-        } else {
-            fs.writeFileSync(fullPath, structure[name]);
+        try {
+            if (typeof structure[name] === 'object') {
+                if (fs.existsSync(fullPath) && !fs.lstatSync(fullPath).isDirectory()) {
+                    if (!askOverwrite(fullPath)) continue;
+                }
+                fs.mkdirSync(fullPath, { recursive: true });
+                createStructure(fullPath, structure[name], askOverwrite);
+            } else {
+                if (fs.existsSync(fullPath)) {
+                    if (!askOverwrite(fullPath)) continue;
+                }
+                fs.writeFileSync(fullPath, structure[name]);
+            }
+        } catch (err) {
+            // eslint-disable-next-line no-console
+            console.error(`Errore nella creazione di ${fullPath}:`, err);
+            throw new Error(`Errore nella creazione di ${fullPath}: ${err instanceof Error ? err.message : String(err)}`);
         }
     }
 }

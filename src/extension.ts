@@ -36,8 +36,56 @@ export function activate(context: vscode.ExtensionContext) {
             return;
         }
 
-        generatePhpStructure(projectRoot, type, entityName);
-        vscode.window.showInformationMessage(`PHP ${type} structure for ${entityName} generated successfully!`);
+        // Definisci le opzioni base per ogni tipo
+        let options: string[] = [];
+        if (type === 'MVC') {
+            options = ['Controller', 'Model', 'View', 'Routes', 'Config', 'Composer'];
+        } else if (type === 'REST') {
+            options = ['Controller', 'Model', 'Middleware', 'Routes', 'Config', 'Composer'];
+        } else if (type === 'Functional') {
+            options = ['Controller', 'Model', 'Public', 'Config', 'Composer'];
+        }
+
+        const selected = await vscode.window.showQuickPick(options, {
+            canPickMany: true,
+            placeHolder: 'Seleziona i componenti da generare'
+        });
+
+        if (!selected || selected.length === 0) {
+            vscode.window.showInformationMessage('Nessun componente selezionato. Operazione annullata.');
+            return;
+        }
+
+        // Chiedi se usare template personalizzati
+        const useCustomTemplates = await vscode.window.showQuickPick([
+            'No',
+            'Sì, scegli una cartella di template personalizzati...'
+        ], {
+            placeHolder: 'Vuoi usare template personalizzati?'
+        });
+
+        let templateDir: string | undefined = undefined;
+        if (useCustomTemplates === 'Sì, scegli una cartella di template personalizzati...') {
+            const folderUris = await vscode.window.showOpenDialog({
+                canSelectFolders: true,
+                canSelectFiles: false,
+                canSelectMany: false,
+                openLabel: 'Seleziona la cartella dei template'
+            });
+            if (folderUris && folderUris.length > 0) {
+                templateDir = folderUris[0].fsPath;
+            } else {
+                vscode.window.showInformationMessage('Nessuna cartella selezionata. Verranno usati i template di default.');
+            }
+        }
+
+        try {
+            generatePhpStructure(projectRoot, type, entityName, selected, templateDir);
+            vscode.window.showInformationMessage(`PHP ${type} structure for ${entityName} generata con successo!`);
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            vscode.window.showErrorMessage(`Errore durante la generazione della struttura: ${msg}`);
+        }
     });
 
     const generateButton = vscode.commands.registerCommand('phpStructure.generate', () => {
