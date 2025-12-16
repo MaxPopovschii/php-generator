@@ -1,9 +1,59 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-function generatePhpStructure(rootPath: string, type: string, entityName: string, selectedComponents?: string[]) {
+function generatePhpStructure(rootPath: string, type: string, entityName: string, options?: any) {
+    let structure: { [key: string]: any } = {};
+
+    // Import and use the appropriate generator
+    try {
+        switch (type) {
+            case 'mvc-advanced':
+                const MVCAdvanced = require('../templates/mvc-advanced/MVCAdvancedGenerator');
+                const mvcGen = new MVCAdvanced.MVCAdvancedGenerator();
+                structure = mvcGen.generate(rootPath, entityName, options);
+                break;
+            
+            case 'mvp':
+                const MVP = require('../templates/mvp/MVPGenerator');
+                const mvpGen = new MVP.MVPGenerator();
+                structure = mvpGen.generate(rootPath, entityName, options);
+                break;
+            
+            case 'layered':
+            case 'rest-api':
+            case 'microservices':
+            case 'functional':
+                // Use legacy generator for these (will be upgraded)
+                structure = generateLegacyStructure(type, entityName, options);
+                break;
+            
+            default:
+                // Fallback to old logic
+                structure = generateLegacyStructure(type, entityName, options);
+        }
+    } catch (error) {
+        console.error('Error loading generator:', error);
+        // Fallback to legacy
+        structure = generateLegacyStructure(type, entityName, options);
+    }
+
+    // Add common files if requested
+    if (options?.includeDocker) {
+        structure['docker-compose.yml'] = getDockerComposeTemplate(entityName);
+        structure['Dockerfile'] = getDockerfileTemplate();
+        structure['.dockerignore'] = getDockerIgnoreTemplate();
+    }
+
+    if (options?.includeGitignore) {
+        structure['.gitignore'] = getGitIgnoreTemplate();
+    }
+
+    createStructure(rootPath, structure);
+}
+
+function generateLegacyStructure(type: string, entityName: string, options?: any): any {
     const structure: { [key: string]: any } = {};
-    const sel = (name: string) => !selectedComponents || selectedComponents.includes(name);
+    const sel = (name: string) => !options?.components || options.components.includes(name);
 
     if (type === 'MVC') {
         structure['app'] = {};
@@ -219,7 +269,110 @@ return [
     }
 }`;
 
-    createStructure(rootPath, structure);
+    return structure;
+}
+
+// Docker templates
+function getDockerComposeTemplate(entityName: string): string {
+    return `version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8000:80"
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      - db
+    environment:
+      - DB_HOST=db
+      - DB_DATABASE=${entityName.toLowerCase()}_db
+      - DB_USERNAME=root
+      - DB_PASSWORD=secret
+
+  db:
+    image: mysql:8.0
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: ${entityName.toLowerCase()}_db
+    volumes:
+      - db_data:/var/lib/mysql
+
+volumes:
+  db_data:
+`;
+}
+
+function getDockerfileTemplate(): string {
+    return `FROM php:8.2-apache
+
+# Install dependencies
+RUN apt-get update && apt-get install -y \\
+    git \\
+    curl \\
+    libpng-dev \\
+    libonig-dev \\
+    libxml2-dev \\
+    zip \\
+    unzip
+
+# Clear cache
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install PHP extensions
+RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+
+# Get Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Set working directory
+WORKDIR /var/www/html
+
+# Copy application files
+COPY . /var/www/html
+
+# Install dependencies
+RUN composer install --no-interaction --optimize-autoloader
+
+# Enable Apache mod_rewrite
+RUN a2enmod rewrite
+
+# Set permissions
+RUN chown -R www-data:www-data /var/www/html
+
+EXPOSE 80
+`;
+}
+
+function getDockerIgnoreTemplate(): string {
+    return `vendor/
+node_modules/
+.git
+.env
+*.log
+.DS_Store
+`;
+}
+
+function getGitIgnoreTemplate(): string {
+    return `/vendor/
+/node_modules/
+.env
+.env.local
+.env.*.local
+*.log
+.DS_Store
+.vscode/
+.idea/
+composer.lock
+package-lock.json
+/public/storage
+/storage/*.key
+/database/*.sqlite
+`;
 }
 
 // Funzione placeholder per la richiesta di conferma sovrascrittura (da gestire lato extension)

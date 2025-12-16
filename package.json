@@ -1,9 +1,9 @@
 {
   "name": "php-generator-structure-web",
-  "displayName": "php-generator",
+  "displayName": "PHP Full-Stack Structure Generator",
   "publisher": "vincentgottemda",
-  "description": "",
-  "version": "0.0.3",
+  "description": "🚀 Generate complete PHP fullstack structures: MVC Advanced, MVP, Layered, REST API, Microservices, Functional. Docker ready, PSR-4 compliant, production-ready code.",
+  "version": "1.0.0",
   "icon": "matreshka.png", 
   "repository": {
     "type": "git",
@@ -13,7 +13,23 @@
     "vscode": "^1.98.0"
   },
   "categories": [
+    "Programming Languages",
+    "Snippets",
     "Other"
+  ],
+  "keywords": [
+    "php",
+    "generator",
+    "mvc",
+    "mvp",
+    "rest api",
+    "microservices",
+    "fullstack",
+    "crud",
+    "scaffolding",
+    "boilerplate",
+    "docker",
+    "psr-4"
   ],
   "activationEvents": [
     "onCommand:extension.generatePhpStructure"
@@ -41,7 +57,9 @@
     "commands": [
       {
         "command": "extension.generatePhpStructure",
-        "title": "Generate PHP Structure"
+        "title": "Generate PHP Structure",
+        "category": "PHP Generator",
+        "icon": "$(add)"
       }
     ]
   },

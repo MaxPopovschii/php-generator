@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { TemplateManager } from './templates/TemplateManager';
 const generatePhpStructure = require("./generators/generator");
 
 export function activate(context: vscode.ExtensionContext) {
@@ -12,79 +13,103 @@ export function activate(context: vscode.ExtensionContext) {
     let disposable = vscode.commands.registerCommand('extension.generatePhpStructure', async () => {
         const folders = vscode.workspace.workspaceFolders;
         if (!folders) {
-            vscode.window.showErrorMessage('Open a project folder before generating the structure.');
+            vscode.window.showErrorMessage('🚫 Open a project folder before generating the structure.');
             return;
         }
 
         const projectRoot = folders[0].uri.fsPath;
 
-        const type = await vscode.window.showQuickPick(['MVC', 'REST', 'Functional'], {
-            placeHolder: 'Select the type of PHP structure to generate'
+        // Get all available templates with nice icons
+        const templates = TemplateManager.getAllTemplates();
+        const templateOptions = templates.map(([key, config]) => ({
+            label: `${config.icon} ${config.name}`,
+            description: config.description,
+            detail: `✨ Features: ${config.features.join(', ')}`,
+            value: key
+        }));
+
+        const selectedTemplate = await vscode.window.showQuickPick(templateOptions, {
+            placeHolder: '🎨 Select the PHP architecture to generate',
+            matchOnDescription: true,
+            matchOnDetail: true
         });
 
-        if (!type) {
-            vscode.window.showInformationMessage('No option selected.');
+        if (!selectedTemplate) {
+            vscode.window.showInformationMessage('❌ No architecture selected.');
             return;
         }
+
+        const type = selectedTemplate.value;
 
         const entityName = await vscode.window.showInputBox({
-            placeHolder: 'Enter the main entity name (e.g., User, Product, Order)'
+            placeHolder: '📝 Enter the main entity name (e.g., User, Product, Order)',
+            prompt: 'Entity name will be used to generate files and classes',
+            validateInput: (value) => {
+                if (!value || !/^[A-Z][A-Za-z]*$/.test(value)) {
+                    return '⚠️ Entity name must start with uppercase and contain only letters';
+                }
+                return null;
+            }
         });
 
-        if (!entityName || !/^[A-Za-z]+$/.test(entityName)) {
-            vscode.window.showErrorMessage('Invalid entity name. Use only letters.');
+        if (!entityName) {
+            vscode.window.showErrorMessage('❌ Invalid entity name.');
             return;
         }
 
-        // Definisci le opzioni base per ogni tipo
-        let options: string[] = [];
-        if (type === 'MVC') {
-            options = ['Controller', 'Model', 'View', 'Routes', 'Config', 'Composer'];
-        } else if (type === 'REST') {
-            options = ['Controller', 'Model', 'Middleware', 'Routes', 'Config', 'Composer'];
-        } else if (type === 'Functional') {
-            options = ['Controller', 'Model', 'Public', 'Config', 'Composer'];
+        // Get template config
+        const templateConfig = TemplateManager.getTemplate(type);
+        if (!templateConfig) {
+            vscode.window.showErrorMessage('❌ Template configuration not found.');
+            return;
         }
 
-        const selected = await vscode.window.showQuickPick(options, {
+        // Allow user to select components
+        const selected = await vscode.window.showQuickPick(templateConfig.includes, {
             canPickMany: true,
-            placeHolder: 'Seleziona i componenti da generare'
+            placeHolder: `📦 Select components to generate (${templateConfig.name})`,
+            ignoreFocusOut: true
         });
 
         if (!selected || selected.length === 0) {
-            vscode.window.showInformationMessage('Nessun componente selezionato. Operazione annullata.');
+            vscode.window.showInformationMessage('❌ No components selected. Operation cancelled.');
             return;
         }
 
-        // Chiedi se usare template personalizzati
-        const useCustomTemplates = await vscode.window.showQuickPick([
-            'No',
-            'Sì, scegli una cartella di template personalizzati...'
-        ], {
-            placeHolder: 'Vuoi usare template personalizzati?'
+        // Additional options
+        const includeDocker = await vscode.window.showQuickPick(['Yes', 'No'], {
+            placeHolder: '🐳 Include Docker configuration?'
         });
 
-        let templateDir: string | undefined = undefined;
-        if (useCustomTemplates === 'Sì, scegli una cartella di template personalizzati...') {
-            const folderUris = await vscode.window.showOpenDialog({
-                canSelectFolders: true,
-                canSelectFiles: false,
-                canSelectMany: false,
-                openLabel: 'Seleziona la cartella dei template'
-            });
-            if (folderUris && folderUris.length > 0) {
-                templateDir = folderUris[0].fsPath;
-            } else {
-                vscode.window.showInformationMessage('Nessuna cartella selezionata. Verranno usati i template di default.');
-            }
-        }
+        const includeTests = await vscode.window.showQuickPick(['Yes', 'No'], {
+            placeHolder: '🧪 Include test files?'
+        });
+
+        const includeGitignore = await vscode.window.showQuickPick(['Yes', 'No'], {
+            placeHolder: '📁 Include .gitignore?'
+        });
 
         try {
-            generatePhpStructure(projectRoot, type, entityName, selected, templateDir);
-            vscode.window.showInformationMessage(`PHP ${type} structure for ${entityName} generata con successo!`);
+            const options = {
+                components: selected,
+                includeDocker: includeDocker === 'Yes',
+                includeTests: includeTests === 'Yes',
+                includeGitignore: includeGitignore === 'Yes'
+            };
+
+            generatePhpStructure(projectRoot, type, entityName, options);
+            
+            vscode.window.showInformationMessage(
+                `✅ ${templateConfig.icon} ${templateConfig.name} structure for "${entityName}" generated successfully! 🎉`,
+                'Open Folder'
+            ).then(selection => {
+                if (selection === 'Open Folder') {
+                    vscode.commands.executeCommand('revealInExplorer', vscode.Uri.file(projectRoot));
+                }
+            });
         } catch (err) {
             const msg = err instanceof Error ? err.message : String(err);
-            vscode.window.showErrorMessage(`Errore durante la generazione della struttura: ${msg}`);
+            vscode.window.showErrorMessage(`❌ Error generating structure: ${msg}`);
         }
     });
 
